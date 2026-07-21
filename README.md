@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Личный Kanban-трекер
 
-## Getting Started
+Простая доска задач (To Do / In Progress / Done) для личного использования, с интеграцией GA4 / GTM / Яндекс.Метрики через кастомные события — учебный полигон для практики с аналитикой на реальных действиях (создание/перемещение/удаление задачи).
 
-First, run the development server:
+Стек: Next.js (App Router) + Prisma + Postgres + Tailwind.
+
+## Локальный запуск
 
 ```bash
+npm install
+# заполнить .env по образцу .env.example (DATABASE_URL обязателен)
+npm run db:migrate   # применяет prisma/migrations к БД
+npm run db:seed      # создаёт дефолтную доску с 3 колонками
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Открыть [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Переменные окружения
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+См. `.env.example`:
 
-## Learn More
+- `DATABASE_URL` — строка подключения к Postgres.
+- `NEXT_PUBLIC_GTM_ID` — Container ID из Google Tag Manager (`GTM-XXXXXXX`). Если не задан, скрипт GTM просто не рендерится — для локальной разработки не обязателен.
 
-To learn more about Next.js, take a look at the following resources:
+## Кастомные события аналитики
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Пушатся в `window.dataLayer` через `lib/analytics.ts` → `pushDataLayerEvent`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Событие | Когда | Параметры |
+|---|---|---|
+| `task_created` | создание задачи | `task_id`, `column_id`, `column_name`, `has_due_date`, `has_tag` |
+| `task_moved` | перемещение между колонками | `task_id`, `from_column_id`, `from_column_name`, `to_column_id`, `to_column_name` |
+| `task_deleted` | удаление задачи | `task_id`, `column_id`, `column_name` |
 
-## Deploy on Vercel
+## Деплой (бесплатно)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Создать пустой репозиторий на GitHub и запушить проект.
+2. Зайти на [vercel.com](https://vercel.com) через "Continue with GitHub", импортировать репозиторий.
+3. В проекте на Vercel: **Storage → Create Database → Postgres** — подключится автоматически, `DATABASE_URL` появится в Environment Variables.
+4. Добавить `NEXT_PUBLIC_GTM_ID` в Environment Variables проекта (после создания GTM-контейнера, см. ниже).
+5. Задеплоить. После первого деплоя миграции нужно применить к прод-базе: `npx prisma migrate deploy` (локально, с `DATABASE_URL` от прод-базы) или через Vercel Postgres UI → Query.
+6. Прогнать `npm run db:seed` с прод-`DATABASE_URL`, чтобы создать дефолтную доску.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Настройка аналитики
+
+1. **GA4**: создать property в Google Analytics → получить Measurement ID (`G-XXXXXXX`).
+2. **GTM**: создать контейнер → получить Container ID (`GTM-XXXXXXX`); внутри настроить:
+   - тег GA4 Configuration (Measurement ID из шага 1), триггер "All Pages";
+   - тег Яндекс.Метрики (шаблон из галереи или Custom HTML), триггер "All Pages".
+3. **Яндекс.Метрика**: создать счётчик в Яндекс.Метрике → ID вставить в тег GTM из шага 2.
+4. Вставить `NEXT_PUBLIC_GTM_ID` в `.env.local` и в Environment Variables на Vercel.
+5. Проверить через GTM Preview mode: теги GA4/Метрики стреляют на загрузке, кастомные события (`task_created` и т.д.) видны в списке событий со своими параметрами.
