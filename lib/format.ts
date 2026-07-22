@@ -11,3 +11,12 @@ export function formatDueDate(value: Date | string) {
     timeZone: "UTC",
   });
 }
+
+export function formatDueTime(value: Date | string) {
+  const d = new Date(value);
+  return d.toLocaleString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  });
+}

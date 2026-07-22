@@ -7,6 +7,7 @@ import { pushDataLayerEvent } from "@/lib/analytics";
 import type { BoardWithColumns } from "@/lib/data";
 import Column from "./Column";
 import TaskForm, { type TaskFormValues } from "./TaskForm";
+import UndoToast from "./UndoToast";
 
 type ColumnData = BoardWithColumns["columns"][number];
 type TaskData = ColumnData["tasks"][number];
@@ -14,6 +15,14 @@ type TaskData = ColumnData["tasks"][number];
 type FormState =
   | { mode: "create"; columnId: string }
   | { mode: "edit"; task: TaskData; columnId: string };
+
+type PendingDelete = {
+  task: TaskData;
+  column: ColumnData;
+  timeoutId: ReturnType<typeof setTimeout>;
+};
+
+const UNDO_WINDOW_MS = 5000;
 
 function errorMessageOf(err: unknown) {
   return err instanceof Error ? err.message : "Что-то пошло не так, попробуй ещё раз";
@@ -24,6 +33,8 @@ export default function Board({ board }: { board: BoardWithColumns }) {
   const [isPending, startTransition] = useTransition();
   const [formState, setFormState] = useState<FormState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hiddenTaskIds, setHiddenTaskIds] = useState<Set<string>>(new Set());
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
 
   const columns = board.columns;
 
@@ -60,9 +71,7 @@ export default function Board({ board }: { board: BoardWithColumns }) {
     });
   }
 
-  function handleDelete(task: TaskData, column: ColumnData) {
-    if (!window.confirm(`Удалить задачу «${task.title}»?`)) return;
-
+  function commitDelete(task: TaskData, column: ColumnData) {
     startTransition(async () => {
       try {
         await deleteTask(task.id);
@@ -76,8 +85,41 @@ export default function Board({ board }: { board: BoardWithColumns }) {
         router.refresh();
       } catch (err) {
         setError(errorMessageOf(err));
+        setHiddenTaskIds((prev) => {
+          const next = new Set(prev);
+          next.delete(task.id);
+          return next;
+        });
       }
     });
+  }
+
+  function handleDelete(task: TaskData, column: ColumnData) {
+    if (pendingDelete) {
+      clearTimeout(pendingDelete.timeoutId);
+      commitDelete(pendingDelete.task, pendingDelete.column);
+    }
+
+    setHiddenTaskIds((prev) => new Set(prev).add(task.id));
+
+    const timeoutId = setTimeout(() => {
+      setPendingDelete(null);
+      commitDelete(task, column);
+    }, UNDO_WINDOW_MS);
+
+    setPendingDelete({ task, column, timeoutId });
+  }
+
+  function handleUndo() {
+    if (!pendingDelete) return;
+
+    clearTimeout(pendingDelete.timeoutId);
+    setHiddenTaskIds((prev) => {
+      const next = new Set(prev);
+      next.delete(pendingDelete.task.id);
+      return next;
+    });
+    setPendingDelete(null);
   }
 
   function handleMove(task: TaskData, fromColumn: ColumnData, direction: "prev" | "next") {
@@ -123,7 +165,10 @@ export default function Board({ board }: { board: BoardWithColumns }) {
         {columns.map((column, index) => (
           <Column
             key={column.id}
-            column={column}
+            column={{
+              ...column,
+              tasks: column.tasks.filter((task) => !hiddenTaskIds.has(task.id)),
+            }}
             isFirst={index === 0}
             isLast={index === columns.length - 1}
             disabled={isPending}
@@ -141,6 +186,9 @@ export default function Board({ board }: { board: BoardWithColumns }) {
           onCancel={closeForm}
           onSubmit={handleSubmit}
         />
+      )}
+      {pendingDelete && (
+        <UndoToast taskTitle={pendingDelete.task.title} onUndo={handleUndo} />
       )}
     </>
   );

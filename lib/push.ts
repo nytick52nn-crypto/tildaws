@@ -1,15 +1,6 @@
 import webpush from "web-push";
 import { prisma } from "@/lib/db";
 
-// dueDate хранится как введённые пользователем числа "как есть" (см. lib/actions.ts),
-// поэтому сравнение с "текущим моментом" нужно делать в том же "виртуальном UTC",
-// сдвинутом на реальное смещение часового пояса пользователя.
-export const TASK_TZ_OFFSET_MINUTES = 180; // Москва, UTC+3, без перевода стрелок
-
-export function fakeUtcNow(): Date {
-  return new Date(Date.now() + TASK_TZ_OFFSET_MINUTES * 60_000);
-}
-
 let vapidConfigured = false;
 
 function ensureVapidConfigured() {

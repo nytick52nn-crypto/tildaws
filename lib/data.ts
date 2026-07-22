@@ -28,3 +28,19 @@ export async function getTaskWithComments(id: string) {
 export type TaskWithComments = NonNullable<
   Awaited<ReturnType<typeof getTaskWithComments>>
 >;
+
+export async function getTasksWithDueDate() {
+  return prisma.task.findMany({
+    where: { dueDate: { not: null } },
+    orderBy: { dueDate: "asc" },
+  });
+}
+
+export type TaskWithDueDate = Awaited<
+  ReturnType<typeof getTasksWithDueDate>
+>[number];
+
+export async function getBoardName() {
+  const board = await prisma.board.findFirst({ select: { name: true } });
+  return board?.name ?? "Мои задачи";
+}

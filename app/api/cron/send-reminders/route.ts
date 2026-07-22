@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { fakeUtcNow, sendPushToAll } from "@/lib/push";
+import { fakeUtcNow } from "@/lib/dueDate";
+import { sendPushToAll } from "@/lib/push";
 
 const LOOKBACK_MS = 30 * 60_000; // 30 минут — запас на случай пропущенных/поздних тиков
 

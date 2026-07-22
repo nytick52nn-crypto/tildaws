@@ -1,5 +1,6 @@
 import Board from "@/components/Board";
 import PushManager from "@/components/PushManager";
+import ViewTabs from "@/components/ViewTabs";
 import { getBoard } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +36,8 @@ export default async function Home() {
             <span key={c.id}>{c.name}</span>
           ))}
         </div>
-        <div className="mt-4">
+        <div className="mt-4 flex items-center justify-between gap-4">
+          <ViewTabs />
           <PushManager />
         </div>
       </header>

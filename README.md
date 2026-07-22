@@ -1,6 +1,6 @@
 # Личный Kanban-трекер
 
-Простая доска задач (To Do / In Progress / Done) для личного использования, с интеграцией GA4 / GTM / Яндекс.Метрики через кастомные события — учебный полигон для практики с аналитикой на реальных действиях (создание/перемещение/удаление задачи). У каждой задачи есть страница `/task/[id]` с комментариями и ссылкой для шаринга, а по дедлайну (`dueDate`) можно получить push-уведомление на телефон.
+Простая доска задач (To Do / In Progress / Done) для личного использования, с интеграцией GA4 / GTM / Яндекс.Метрики через кастомные события — учебный полигон для практики с аналитикой на реальных действиях (создание/перемещение/удаление задачи). У каждой задачи есть страница `/task/[id]` с комментариями и ссылкой для шаринга, по дедлайну (`dueDate`) можно получить push-уведомление на телефон, есть недельный agenda-вид (`/agenda`) и .ics-подписка для обычного календаря.
 
 Стек: Next.js (App Router) + Prisma + Postgres + Tailwind.
 
@@ -25,7 +25,8 @@ npm run dev
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` — ключи Web Push (генерируются один раз: `npx web-push generate-vapid-keys --json`).
 - `CRON_SECRET` — защищает `/api/cron/send-reminders`; настраивается как заголовок `Authorization: Bearer <секрет>` во внешнем планировщике (cron-job.org).
 - `NEXT_PUBLIC_PUSH_TOKEN` — попадает в клиентский бандл, защищает `/api/push/*` от случайного сканирования (не настоящий секрет, см. комментарий в коде роутов).
-- `NEXT_PUBLIC_SITE_URL` — публичный URL сайта, используется для абсолютных ссылок в пуш-уведомлениях.
+- `NEXT_PUBLIC_SITE_URL` — публичный URL сайта, используется для абсолютных ссылок в пуш-уведомлениях и в .ics-фиде.
+- `ICS_FEED_TOKEN` — секрет для `.ics`-фида (`/api/ics/<токен>`), часть URL, а не заголовок (календарные приложения не умеют слать кастомные заголовки при подписке).
 
 ## Кастомные события аналитики
 
@@ -49,6 +50,19 @@ npm run dev
 - Vercel Hobby не поддерживает cron чаще раза в день, поэтому расписание держит внешний бесплатный **cron-job.org**: задание раз в 5 минут дёргает `GET /api/cron/send-reminders` с заголовком `Authorization: Bearer <CRON_SECRET>`.
 - На iPhone (Safari) push работает только для сайта, добавленного на экран "Домой" (ограничение iOS) — на Android/десктопе работает сразу.
 
+## Agenda-вид и .ics-подписка
+
+`/agenda` — те же задачи, сгруппированные по дням недели (а не по статусам), плюс отдельный блок "Без даты". Навигация по неделям — через `?week=YYYY-MM-DD` (понедельник недели), сегодняшний день подсвечен акцентом. Группировка и "что сегодня" считаются через `fakeUtcNow()` из `lib/dueDate.ts` — тот же виртуальный UTC, что и в push-напоминаниях, иначе задачи могли бы съезжать на соседний день у полуночи.
+
+`.ics`-фид (`app/api/ics/[token]/route.ts`, генератор — `lib/ics.ts`) отдаёт задачи с `dueDate` в формате RFC5545 для подписки в Google/Apple Calendar:
+
+1. Собери URL: `https://<домен>/api/ics/<значение ICS_FEED_TOKEN>`.
+2. **Google Calendar**: Settings → Add calendar → From URL → вставить адрес.
+3. **Apple Calendar**: File → New Calendar Subscription → вставить адрес.
+4. Событие должно показать то же время, что и в трекере (например, 15:00, а не 18:00/12:00) — календарь читает `DTSTART;TZID=Europe/Moscow`, без реального UTC-сдвига.
+
+Кнопки "скопировать календарную ссылку" в интерфейсе нет намеренно — токен не должен попасть в клиентский код, собери URL вручную один раз.
+
 ## Деплой (бесплатно)
 
 1. Создать пустой репозиторий на GitHub и запушить проект.
@@ -57,7 +71,7 @@ npm run dev
 4. Добавить `NEXT_PUBLIC_GTM_ID` в Environment Variables проекта (после создания GTM-контейнера, см. ниже).
 5. Задеплоить. После первого деплоя миграции нужно применить к прод-базе: `npx prisma migrate deploy` (локально, с `DATABASE_URL` от прод-базы) или через Vercel Postgres UI → Query.
 6. Прогнать `npm run db:seed` с прод-`DATABASE_URL`, чтобы создать дефолтную доску.
-7. Добавить Web Push переменные (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`, `NEXT_PUBLIC_PUSH_TOKEN`, `NEXT_PUBLIC_SITE_URL`) в Environment Variables, задеплоить ещё раз.
+7. Добавить Web Push переменные (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`, `NEXT_PUBLIC_PUSH_TOKEN`, `NEXT_PUBLIC_SITE_URL`) и `ICS_FEED_TOKEN` в Environment Variables, задеплоить ещё раз.
 8. Завести аккаунт на [cron-job.org](https://cron-job.org), создать задание: `GET https://<домен>/api/cron/send-reminders` раз в 5 минут, заголовок `Authorization: Bearer <CRON_SECRET>`.
 
 ## Настройка аналитики
