@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type MouseEvent } from "react";
 
 export type TaskFormValues = {
   title: string;
@@ -30,9 +30,21 @@ export default function TaskForm({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [dueDate, setDueDate] = useState(
-    initial?.dueDate ? new Date(initial.dueDate).toISOString().slice(0, 10) : ""
+    initial?.dueDate ? new Date(initial.dueDate).toISOString().slice(0, 16) : ""
   );
   const [tag, setTag] = useState(initial?.tag ?? "");
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onCancel();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel]);
+
+  function handleBackdropClick(e: MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) onCancel();
+  }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -41,7 +53,10 @@ export default function TaskForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div
+      onClick={handleBackdropClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    >
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-lg bg-white p-4 shadow-lg dark:bg-neutral-900"
@@ -65,7 +80,7 @@ export default function TaskForm({
             className="rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"
           />
           <input
-            type="date"
+            type="datetime-local"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
             className="rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"

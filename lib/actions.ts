@@ -3,6 +3,14 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
+// Значение из <input type="datetime-local"> ("YYYY-MM-DDTHH:mm") трактуем как
+// введённые пользователем числа "как есть", без конвертации через часовой пояс
+// сервера — иначе 15:00, введённые в браузере, могли бы сохраниться как другое время.
+function parseDueDate(value?: string): Date | null {
+  if (!value) return null;
+  return new Date(`${value}:00Z`);
+}
+
 export type CreateTaskInput = {
   columnId: string;
   title: string;
@@ -32,7 +40,7 @@ export async function createTask(input: CreateTaskInput) {
       columnId: input.columnId,
       title,
       description: input.description?.trim() || null,
-      dueDate: input.dueDate ? new Date(input.dueDate) : null,
+      dueDate: parseDueDate(input.dueDate),
       tag: input.tag?.trim() || null,
       order: (last?.order ?? -1) + 1,
     },
@@ -51,7 +59,7 @@ export async function updateTask(taskId: string, input: UpdateTaskInput) {
     data: {
       title,
       description: input.description?.trim() || null,
-      dueDate: input.dueDate ? new Date(input.dueDate) : null,
+      dueDate: parseDueDate(input.dueDate),
       tag: input.tag?.trim() || null,
     },
   });

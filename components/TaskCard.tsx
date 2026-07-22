@@ -4,6 +4,20 @@ import type { BoardWithColumns } from "@/lib/data";
 
 type TaskData = BoardWithColumns["columns"][number]["tasks"][number];
 
+// dueDate хранится как введённые пользователем числа "как есть" (см. lib/actions.ts),
+// поэтому показываем их через UTC-геттеры, а не через локальный часовой пояс браузера.
+function formatDueDate(value: Date | string) {
+  const d = new Date(value);
+  return d.toLocaleString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  });
+}
+
 export default function TaskCard({
   task,
   canMovePrev,
@@ -36,9 +50,7 @@ export default function TaskCard({
               {task.tag}
             </span>
           )}
-          {task.dueDate && (
-            <span>{new Date(task.dueDate).toLocaleDateString("ru-RU")}</span>
-          )}
+          {task.dueDate && <span>{formatDueDate(task.dueDate)}</span>}
         </div>
       )}
       <div className="mt-2 flex items-center justify-between">
