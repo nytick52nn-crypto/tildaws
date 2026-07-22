@@ -59,8 +59,8 @@ export default function PushManager() {
 
       setSubscribed(true);
       setStatus("Уведомления включены");
-    } catch {
-      setStatus("Не удалось включить уведомления");
+    } catch (err) {
+      setStatus(`Ошибка: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setBusy(false);
     }
@@ -73,8 +73,8 @@ export default function PushManager() {
       const res = await pushFetch("/api/push/test", {});
       const data = await res.json();
       setStatus(res.ok ? `Отправлено на ${data.sent}/${data.total} устройств` : "Ошибка отправки");
-    } catch {
-      setStatus("Не удалось отправить тестовый пуш");
+    } catch (err) {
+      setStatus(`Ошибка: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setBusy(false);
     }
