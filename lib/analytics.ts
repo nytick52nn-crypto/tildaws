@@ -9,7 +9,7 @@ export type AnalyticsEvent =
       column_id: string;
       column_name: string;
       has_due_date: boolean;
-      has_tag: boolean;
+      has_labels: boolean;
     }
   | {
       event: "task_moved";

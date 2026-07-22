@@ -57,7 +57,7 @@ export default function Board({ board }: { board: BoardWithColumns }) {
             column_id: state.columnId,
             column_name: column?.name ?? "",
             has_due_date: Boolean(values.dueDate),
-            has_tag: Boolean(values.tag),
+            has_labels: Boolean(values.labels),
           });
         } else {
           await updateTask(state.task.id, values);

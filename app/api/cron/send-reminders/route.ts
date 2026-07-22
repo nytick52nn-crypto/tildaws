@@ -10,6 +10,13 @@ function isAuthorized(request: Request) {
   return header === `Bearer ${process.env.CRON_SECRET}`;
 }
 
+function offsetLabel(offsetMinutes: number): string {
+  if (offsetMinutes <= 0) return "Сейчас";
+  if (offsetMinutes < 60) return `Через ${offsetMinutes} мин`;
+  if (offsetMinutes < 24 * 60) return "Через час";
+  return "Через день";
+}
+
 export async function GET(request: Request) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -19,25 +26,35 @@ export async function GET(request: Request) {
   const windowStart = new Date(now.getTime() - LOOKBACK_MS);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
-  const dueTasks = await prisma.task.findMany({
-    where: {
-      dueDate: { gte: windowStart, lte: now },
-      reminderSentAt: null,
-    },
+  const pending = await prisma.reminder.findMany({
+    where: { sentAt: null, task: { dueDate: { not: null } } },
+    include: { task: { include: { taskLabels: { include: { label: true } } } } },
   });
 
-  for (const task of dueTasks) {
+  let sentCount = 0;
+
+  for (const reminder of pending) {
+    const dueDate = reminder.task.dueDate;
+    if (!dueDate) continue;
+
+    const fireAt = new Date(dueDate.getTime() - reminder.offsetMinutes * 60_000);
+    if (fireAt < windowStart || fireAt > now) continue;
+
+    const labelNames = reminder.task.taskLabels.map((tl) => tl.label.name);
+
     await sendPushToAll({
-      title: task.title,
-      body: task.tag ? `Тег: ${task.tag}` : "Наступило время задачи",
-      url: `${siteUrl}/task/${task.id}`,
+      title: `${offsetLabel(reminder.offsetMinutes)}: ${reminder.task.title}`,
+      body: labelNames.length > 0 ? labelNames.join(", ") : "Наступает время задачи",
+      url: `${siteUrl}/task/${reminder.task.id}`,
     });
 
-    await prisma.task.update({
-      where: { id: task.id },
-      data: { reminderSentAt: new Date() },
+    await prisma.reminder.update({
+      where: { id: reminder.id },
+      data: { sentAt: new Date() },
     });
+
+    sentCount += 1;
   }
 
-  return NextResponse.json({ checked: dueTasks.length });
+  return NextResponse.json({ checked: pending.length, sent: sentCount });
 }

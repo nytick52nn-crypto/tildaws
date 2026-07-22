@@ -6,7 +6,14 @@ export async function getBoard() {
       columns: {
         orderBy: { order: "asc" },
         include: {
-          tasks: { orderBy: { order: "asc" } },
+          tasks: {
+            orderBy: { order: "asc" },
+            include: {
+              taskLabels: { include: { label: true } },
+              subtasks: { orderBy: { order: "asc" } },
+              reminders: true,
+            },
+          },
         },
       },
     },
@@ -21,6 +28,9 @@ export async function getTaskWithComments(id: string) {
     include: {
       column: { include: { board: true } },
       comments: { orderBy: { createdAt: "asc" } },
+      taskLabels: { include: { label: true } },
+      subtasks: { orderBy: { order: "asc" } },
+      reminders: { orderBy: { offsetMinutes: "asc" } },
     },
   });
 }
@@ -33,6 +43,9 @@ export async function getTasksWithDueDate() {
   return prisma.task.findMany({
     where: { dueDate: { not: null } },
     orderBy: { dueDate: "asc" },
+    include: {
+      taskLabels: { include: { label: true } },
+    },
   });
 }
 

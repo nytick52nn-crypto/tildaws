@@ -62,6 +62,14 @@ function uidDomain(siteUrl: string): string {
   }
 }
 
+// RFC5545: 1 (высший) .. 9 (низший), 0/отсутствует — не задан.
+const ICS_PRIORITY: Record<string, number> = {
+  urgent: 1,
+  high: 3,
+  medium: 5,
+  low: 9,
+};
+
 export function buildIcsFeed(
   tasks: TaskWithDueDate[],
   boardName: string,
@@ -103,6 +111,13 @@ export function buildIcsFeed(
     lines.push(`SUMMARY:${escapeIcsText(task.title)}`);
     if (task.description) {
       lines.push(`DESCRIPTION:${escapeIcsText(task.description)}`);
+    }
+    if (task.priority && ICS_PRIORITY[task.priority]) {
+      lines.push(`PRIORITY:${ICS_PRIORITY[task.priority]}`);
+    }
+    const labelNames = task.taskLabels.map((tl) => tl.label.name);
+    if (labelNames.length > 0) {
+      lines.push(`CATEGORIES:${labelNames.map(escapeIcsText).join(",")}`);
     }
     if (siteUrl) {
       lines.push(`URL:${siteUrl}/task/${task.id}`);
