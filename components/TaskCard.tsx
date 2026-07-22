@@ -36,31 +36,37 @@ export default function TaskCard({
   onMove: (direction: "prev" | "next") => void;
 }) {
   return (
-    <div className="rounded-md border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
-      <p className="text-sm font-medium">{task.title}</p>
+    <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 transition-shadow hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900">
+      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+        {task.title}
+      </p>
       {task.description && (
-        <p className="mt-1 line-clamp-3 text-xs text-neutral-500">
+        <p className="mt-1 line-clamp-3 text-xs text-neutral-500 dark:text-neutral-400">
           {task.description}
         </p>
       )}
       {(task.tag || task.dueDate) && (
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-neutral-500">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {task.tag && (
-            <span className="rounded bg-neutral-100 px-1.5 py-0.5 dark:bg-neutral-800">
+            <span className="bg-accent/10 text-accent rounded-full px-2 py-0.5 font-mono text-[11px]">
               {task.tag}
             </span>
           )}
-          {task.dueDate && <span>{formatDueDate(task.dueDate)}</span>}
+          {task.dueDate && (
+            <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
+              {formatDueDate(task.dueDate)}
+            </span>
+          )}
         </div>
       )}
-      <div className="mt-2 flex items-center justify-between">
+      <div className="mt-3 flex items-center justify-between border-t border-neutral-200 pt-2 dark:border-neutral-800">
         <div className="flex gap-1">
           <button
             type="button"
             aria-label="Переместить влево"
             disabled={disabled || !canMovePrev}
             onClick={() => onMove("prev")}
-            className="rounded px-1.5 py-0.5 text-xs hover:bg-neutral-100 disabled:opacity-30 dark:hover:bg-neutral-800"
+            className="rounded px-1.5 py-0.5 text-xs text-neutral-500 hover:bg-neutral-200 disabled:opacity-30 dark:text-neutral-400 dark:hover:bg-neutral-800"
           >
             ←
           </button>
@@ -69,7 +75,7 @@ export default function TaskCard({
             aria-label="Переместить вправо"
             disabled={disabled || !canMoveNext}
             onClick={() => onMove("next")}
-            className="rounded px-1.5 py-0.5 text-xs hover:bg-neutral-100 disabled:opacity-30 dark:hover:bg-neutral-800"
+            className="rounded px-1.5 py-0.5 text-xs text-neutral-500 hover:bg-neutral-200 disabled:opacity-30 dark:text-neutral-400 dark:hover:bg-neutral-800"
           >
             →
           </button>
@@ -79,17 +85,19 @@ export default function TaskCard({
             type="button"
             disabled={disabled}
             onClick={onEdit}
-            className="rounded px-1.5 py-0.5 text-xs hover:bg-neutral-100 disabled:opacity-30 dark:hover:bg-neutral-800"
+            aria-label="Редактировать"
+            className="rounded px-1.5 py-0.5 text-xs text-neutral-500 hover:bg-neutral-200 disabled:opacity-30 dark:text-neutral-400 dark:hover:bg-neutral-800"
           >
-            Изм.
+            ✎
           </button>
           <button
             type="button"
             disabled={disabled}
             onClick={onDelete}
-            className="rounded px-1.5 py-0.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-30 dark:hover:bg-red-950"
+            aria-label="Удалить"
+            className="rounded px-1.5 py-0.5 text-xs text-red-500 hover:bg-red-50 disabled:opacity-30 dark:hover:bg-red-950"
           >
-            Удал.
+            🗑
           </button>
         </div>
       </div>

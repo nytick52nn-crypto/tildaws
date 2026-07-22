@@ -16,6 +16,9 @@ type InitialTask = {
   tag?: string | null;
 };
 
+const inputClass =
+  "focus:border-accent rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm outline-none transition-colors dark:border-neutral-800 dark:bg-neutral-950";
+
 export default function TaskForm({
   initial,
   disabled,
@@ -55,56 +58,56 @@ export default function TaskForm({
   return (
     <div
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
     >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-lg bg-white p-4 shadow-lg dark:bg-neutral-900"
+        className="w-full max-w-sm rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl dark:border-neutral-800 dark:bg-neutral-950"
       >
-        <h3 className="mb-3 text-sm font-medium">
+        <h3 className="mb-4 text-xs font-semibold tracking-widest text-neutral-500 uppercase dark:text-neutral-400">
           {initial ? "Редактировать задачу" : "Новая задача"}
         </h3>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           <input
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Название"
-            className="rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+            className={inputClass}
           />
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Описание"
             rows={3}
-            className="rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+            className={inputClass}
           />
           <input
             type="datetime-local"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+            className={inputClass}
           />
           <input
             value={tag}
             onChange={(e) => setTag(e.target.value)}
             placeholder="Тег"
-            className="rounded border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+            className={inputClass}
           />
         </div>
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-5 flex justify-end gap-2">
           <button
             type="button"
             onClick={onCancel}
             disabled={disabled}
-            className="rounded px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            className="rounded-lg px-3 py-2 text-sm text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-900"
           >
             Отмена
           </button>
           <button
             type="submit"
             disabled={disabled || !title.trim()}
-            className="rounded bg-neutral-900 px-3 py-1.5 text-sm text-white hover:bg-neutral-700 disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+            className="bg-accent rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             Сохранить
           </button>

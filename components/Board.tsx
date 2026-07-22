@@ -107,7 +107,7 @@ export default function Board({ board }: { board: BoardWithColumns }) {
   return (
     <>
       {error && (
-        <div className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 sm:mx-6 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+        <div className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700 sm:mx-8 dark:border-red-900/50 dark:bg-red-950/50 dark:text-red-300">
           <span>{error}</span>
           <button
             type="button"
@@ -119,7 +119,7 @@ export default function Board({ board }: { board: BoardWithColumns }) {
           </button>
         </div>
       )}
-      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:overflow-x-auto sm:p-6">
+      <div className="flex flex-col gap-5 p-4 sm:flex-row sm:overflow-x-auto sm:p-8">
         {columns.map((column, index) => (
           <Column
             key={column.id}
