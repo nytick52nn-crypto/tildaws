@@ -14,3 +14,17 @@ export async function getBoard() {
 }
 
 export type BoardWithColumns = NonNullable<Awaited<ReturnType<typeof getBoard>>>;
+
+export async function getTaskWithComments(id: string) {
+  return prisma.task.findUnique({
+    where: { id },
+    include: {
+      column: { include: { board: true } },
+      comments: { orderBy: { createdAt: "asc" } },
+    },
+  });
+}
+
+export type TaskWithComments = NonNullable<
+  Awaited<ReturnType<typeof getTaskWithComments>>
+>;

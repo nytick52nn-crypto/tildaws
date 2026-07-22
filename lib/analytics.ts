@@ -24,6 +24,15 @@ export type AnalyticsEvent =
       task_id: string;
       column_id: string;
       column_name: string;
+    }
+  | {
+      event: "comment_added";
+      task_id: string;
+      author_provided: boolean;
+    }
+  | {
+      event: "task_shared";
+      task_id: string;
     };
 
 export function pushDataLayerEvent(event: AnalyticsEvent) {

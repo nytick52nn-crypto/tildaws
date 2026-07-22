@@ -1,22 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import type { BoardWithColumns } from "@/lib/data";
+import { formatDueDate } from "@/lib/format";
 
 type TaskData = BoardWithColumns["columns"][number]["tasks"][number];
-
-// dueDate хранится как введённые пользователем числа "как есть" (см. lib/actions.ts),
-// поэтому показываем их через UTC-геттеры, а не через локальный часовой пояс браузера.
-function formatDueDate(value: Date | string) {
-  const d = new Date(value);
-  return d.toLocaleString("ru-RU", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC",
-  });
-}
 
 export default function TaskCard({
   task,
@@ -37,9 +25,12 @@ export default function TaskCard({
 }) {
   return (
     <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 transition-shadow hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900">
-      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+      <Link
+        href={`/task/${task.id}`}
+        className="hover:text-accent block text-sm font-medium text-neutral-900 hover:underline dark:text-neutral-100"
+      >
         {task.title}
-      </p>
+      </Link>
       {task.description && (
         <p className="mt-1 line-clamp-3 text-xs text-neutral-500 dark:text-neutral-400">
           {task.description}

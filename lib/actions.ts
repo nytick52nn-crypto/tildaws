@@ -90,3 +90,25 @@ export async function deleteTask(taskId: string) {
   await prisma.task.delete({ where: { id: taskId } });
   revalidatePath("/");
 }
+
+export type AddCommentInput = {
+  taskId: string;
+  authorName?: string;
+  body: string;
+};
+
+export async function addComment(input: AddCommentInput) {
+  const body = input.body.trim();
+  if (!body) throw new Error("Комментарий не может быть пустым");
+
+  const comment = await prisma.comment.create({
+    data: {
+      taskId: input.taskId,
+      authorName: input.authorName?.trim() || "Гость",
+      body,
+    },
+  });
+
+  revalidatePath(`/task/${input.taskId}`);
+  return comment;
+}

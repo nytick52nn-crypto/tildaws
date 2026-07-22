@@ -1,4 +1,5 @@
 import Board from "@/components/Board";
+import PushManager from "@/components/PushManager";
 import { getBoard } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,9 @@ export default async function Home() {
           {board.columns.map((c) => (
             <span key={c.id}>{c.name}</span>
           ))}
+        </div>
+        <div className="mt-4">
+          <PushManager />
         </div>
       </header>
       <Board board={board} />
